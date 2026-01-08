@@ -4,6 +4,8 @@ from pathlib import Path
 import typer
 from rich.console import Console
 from rich.table import Table
+from .init_cli import router
+
 
 app = typer.Typer()
 
@@ -55,6 +57,7 @@ def ssl():
 
 
 def main() -> None:
+    app.add_typer(router)
     typer.main.get_command(app)()
 
 
