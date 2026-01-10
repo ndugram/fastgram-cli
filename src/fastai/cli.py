@@ -7,6 +7,20 @@ from rich.table import Table
 from .init_cli import router
 
 
+"""
+fastai-cli - A modern CLI tool for FastAPI developers
+
+This module provides command-line interface for managing FastAPI projects.
+
+Usage:
+    fastai init [name]     - Initialize new FastAPI project
+    fastai ssl             - Generate self-signed SSL certificates
+    fastai help            - Show available commands
+
+For more information, visit: https://github.com/ndugram/fastai-cli
+"""
+
+
 app = typer.Typer()
 
 
@@ -17,6 +31,7 @@ def show_help():
     """
     table = Table(title="FastAI CLI Commands")
     console = Console()
+
     table.add_column("Command", style="cyan")
     table.add_column("Description", style="magenta")
 
