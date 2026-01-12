@@ -2,7 +2,7 @@
 
 ## Supported Versions
 
-We currently support the latest version of fastapi-cli. Please ensure you are using the most recent release.
+We currently support the latest version of fastgram. Please ensure you are using the most recent release.
 
 | Version | Supported |
 |---------|-----------|

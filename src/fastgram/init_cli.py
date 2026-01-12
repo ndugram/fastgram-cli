@@ -4,14 +4,14 @@ from rich.console import Console
 
 
 """
-fastai-cli - A modern CLI tool for FastAPI developers
+fastgram - A modern CLI tool for FastAPI developers
 
 This module provides commands for initializing FastAPI projects
 and managing development servers.
 
 Usage:
-    fastai init <project_name>    - Create new FastAPI project structure
-    fastai help                   - Show available commands
+    fastgram init <project_name>    - Create new FastAPI project structure
+    fastgram help                   - Show available commands
 """
 
 

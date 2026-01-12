@@ -8,16 +8,16 @@ from .init_cli import router
 
 
 """
-fastai-cli - A modern CLI tool for FastAPI developers
+fastgram - A modern CLI tool for FastAPI developers
 
 This module provides command-line interface for managing FastAPI projects.
 
 Usage:
-    fastai init [name]     - Initialize new FastAPI project
-    fastai ssl             - Generate self-signed SSL certificates
-    fastai help            - Show available commands
+    fastgram init [name]     - Initialize new FastAPI project
+    fastgram ssl             - Generate self-signed SSL certificates
+    fastgram help            - Show available commands
 
-For more information, visit: https://github.com/ndugram/fastai-cli
+For more information, visit: https://github.com/ndugram/fastgram-cli
 """
 
 
@@ -29,7 +29,7 @@ def show_help():
     """
     Show help command
     """
-    table = Table(title="FastAI CLI Commands")
+    table = Table(title="Fastgram CLI Commands")
     console = Console()
 
     table.add_column("Command", style="cyan")
@@ -60,7 +60,7 @@ def ssl():
         "-out", str(cert),
         "-days", "365",
         "-nodes",
-        "-subj", "/C=US/ST=None/L=None/O=FastAI/OU=Dev/CN=localhost",
+        "-subj", "/C=US/ST=None/L=None/O=Fastgram/OU=Dev/CN=localhost",
     ]
 
     typer.echo("🔐 Generating SSL certs (non-interactive)...")
