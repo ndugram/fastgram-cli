@@ -26,6 +26,7 @@ FOLDERS = [
     "schema",
     "api",
     "views",
+    "middleware",
 ]
 
 
@@ -71,19 +72,20 @@ ReDoc: http://127.0.0.1:8000/redoc
 """
 from fastapi import FastAPI
 
+from middleware.loader import load_middlewares
+
 
 app = FastAPI(
     title="FastAPI Project",
     description="A modern FastAPI application",
     version="1.0.0",
 )
+load_middlewares(app)
 
 
 @app.get("/")
 async def root():
-    """Root endpoint - returns API status."""
     return {"status": "ok", "message": "Welcome to FastAPI"}
-
 '''
     )
 
@@ -111,6 +113,7 @@ Options for runserver:
 
 import sys
 import uvicorn
+from settings import HOST, PORT, RELOAD
 
 
 def main():
@@ -122,9 +125,9 @@ def main():
     command = sys.argv[1]
     args = sys.argv[2:]
 
-    host = "127.0.0.1"
-    port = 8000
-    reload = True
+    host = HOST
+    port = PORT
+    reload = RELOAD
 
     i = 0
     while i < len(args):
@@ -158,6 +161,171 @@ def main():
 
 if __name__ == "__main__":
     main()
+'''
+    )
+
+    middleware_dir = project_dir / "middleware"
+
+    (middleware_dir / "cors.py").write_text(
+        '''"""CORS Middleware for FastAPI.
+
+Provides Cross-Origin Resource Sharing (CORS) support
+to allow cross-origin requests.
+"""
+from starlette.middleware.cors import CORSMiddleware
+
+
+class CORSMiddleware(CORSMiddleware):
+    """Custom CORS Middleware with permissive settings."""
+
+    def __init__(self, app):
+        super().__init__(
+            app,
+            allow_origins=["*"],
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
+'''
+    )
+
+    (middleware_dir / "request_id.py").write_text(
+        '''"""Request ID Middleware for FastAPI.
+
+Adds a unique request ID to each incoming request
+and includes it in the response headers.
+"""
+import uuid
+
+from starlette.middleware.base import BaseHTTPMiddleware
+from fastapi import Request
+
+
+class RequestIDMiddleware(BaseHTTPMiddleware):
+    """Middleware that assigns a unique ID to each request."""
+
+    async def dispatch(self, request: Request, call_next):
+        request_id = uuid.uuid4().hex
+        request.state.request_id = request_id
+        response = await call_next(request)
+        response.headers["X-Request-ID"] = request_id
+        return response
+'''
+    )
+
+    (middleware_dir / "logging.py").write_text(
+        '''"""Logging Middleware for FastAPI.
+
+Logs incoming HTTP requests with method and URL.
+"""
+from starlette.middleware.base import BaseHTTPMiddleware
+from fastapi import Request
+
+
+class LoggingMiddleware(BaseHTTPMiddleware):
+    """Middleware that logs basic request information."""
+
+    async def dispatch(self, request: Request, call_next):
+        print(f"[REQ] {request.method} {request.url}")
+        return await call_next(request)
+'''
+    )
+
+    (middleware_dir / "rate_limit.py").write_text(
+        '''"""Rate Limit Middleware for FastAPI.
+
+Limits the number of requests from a single IP address.
+Uses in-memory storage by default.
+"""
+import time
+
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import JSONResponse
+from fastapi import status
+
+from settings import RATE_LIMIT_LIMIT
+
+
+class RateLimitMiddleware(BaseHTTPMiddleware):
+    """Middleware that rate limits requests by IP address."""
+
+    def __init__(self, app):
+        super().__init__(app)
+        limit, window = RATE_LIMIT_LIMIT.split("/")
+        self.limit = int(limit)
+        self.window_seconds = 1 if window == "second" else 60
+        self.requests: dict[str, list[float]] = {}
+
+    async def dispatch(self, request, call_next):
+        client_ip = request.client.host if request.client else "unknown"
+        now = time.time()
+
+        if client_ip in self.requests:
+            self.requests[client_ip] = [
+                t for t in self.requests[client_ip]
+                if now - t < self.window_seconds
+            ]
+        else:
+            self.requests[client_ip] = []
+
+        if len(self.requests[client_ip]) >= self.limit:
+            return JSONResponse(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                content={"error": "Too Many Requests"},
+            )
+
+        self.requests[client_ip].append(now)
+
+        return await call_next(request)
+'''
+    )
+
+    (middleware_dir / "loader.py").write_text(
+        '''"""Middleware loader utility.
+
+Automatically loads all middlewares defined in settings.MIDDLEWARE
+and applies them to the FastAPI application.
+"""
+import importlib
+
+from fastapi import FastAPI
+
+from settings import MIDDLEWARE
+
+
+def load_middlewares(app: FastAPI) -> None:
+    """Load and register all middlewares from settings."""
+    for dotted_path in MIDDLEWARE:
+        module_path, class_name = dotted_path.rsplit(".", 1)
+        module = importlib.import_module(module_path)
+        middleware_class = getattr(module, class_name)
+        app.add_middleware(middleware_class)
+'''
+    )
+
+    settings_py = project_dir / "settings.py"
+    settings_py.write_text(
+        '''"""Application settings.
+
+Contains configuration for the FastAPI application,
+including middleware registration and server settings.
+"""
+
+# Server settings
+HOST = "127.0.0.1"
+PORT = 8000
+RELOAD = True
+
+# Rate limit settings
+RATE_LIMIT_LIMIT = "5/second"
+
+# Middleware registration
+# Order matters: middlewares are applied from top to bottom
+MIDDLEWARE = [
+    "middleware.rate_limit.RateLimitMiddleware",
+    "middleware.logging.LoggingMiddleware",
+    "middleware.cors.CORSMiddleware",
+    "middleware.request_id.RequestIDMiddleware",
+]
 '''
     )
 

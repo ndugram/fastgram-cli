@@ -1,6 +1,6 @@
 # fastgram
 
-A modern CLI tool for FastAPI developers - initialize projects and generate SSL certificates.
+A modern CLI tool for FastAPI developers - initialize projects with middleware, manage settings, and generate SSL certificates.
 
 ![Python Version](https://img.shields.io/badge/python-3.10%2B-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
@@ -10,6 +10,8 @@ A modern CLI tool for FastAPI developers - initialize projects and generate SSL 
 
 - 🚀 Initialize FastAPI project structure with Django-like folder layout
 - 🔐 Generate self-signed SSL certificates
+- 📦 Pre-configured middleware (CORS, Request ID, Logging, Rate Limit)
+- ⚙️ Centralized settings (server, middleware, rate limits)
 - 💅 Beautiful output with Rich library
 - ⚡ Fast and easy to use
 - 📦 Ready for PyPI publication
@@ -54,7 +56,7 @@ python manage.py runserver
 fastgram init [name]
 ```
 
-Creates a new FastAPI project structure:
+Creates a new FastAPI project structure with pre-configured middleware:
 
 ```
 project_name/
@@ -70,17 +72,75 @@ project_name/
 │   └── __init__.py
 ├── views/
 │   └── __init__.py
+├── middleware/
+│   ├── __init__.py
+│   ├── cors.py
+│   ├── logging.py
+│   ├── rate_limit.py
+│   ├── request_id.py
+│   └── loader.py
 ├── main.py
-└── manage.py
+├── manage.py
+└── settings.py
 ```
 
 Default project name: `backend`
 
-## Generate SSL Certificates
+## Middleware
 
-```bash
-fastgram ssl
+Generated projects include these middleware by default:
+
+| Middleware | Description |
+|------------|-------------|
+| `RateLimitMiddleware` | Rate limiting (default: 5 requests/second) |
+| `LoggingMiddleware` | Logs incoming HTTP requests |
+| `CORSMiddleware` | Cross-Origin Resource Sharing (permissive) |
+| `RequestIDMiddleware` | Adds unique request ID to each request |
+
+### Configure Middleware
+
+Edit `settings.py` to modify middleware:
+
+```python
+MIDDLEWARE = [
+    "middleware.rate_limit.RateLimitMiddleware",
+    "middleware.logging.LoggingMiddleware",
+    "middleware.cors.CORSMiddleware",
+    "middleware.request_id.RequestIDMiddleware",
+]
 ```
+
+### Rate Limit Settings
+
+Configure rate limiting in `settings.py`:
+
+```python
+RATE_LIMIT_LIMIT = "5/second"  # Format: "<count>/<second|minute>"
+```
+
+## Settings
+
+All configuration is centralized in `settings.py`:
+
+```python
+# Server settings
+HOST = "127.0.0.1"
+PORT = 8000
+RELOAD = True
+
+# Rate limit settings
+RATE_LIMIT_LIMIT = "5/second"
+
+# Middleware registration
+MIDDLEWARE = [
+    "middleware.rate_limit.RateLimitMiddleware",
+    "middleware.logging.LoggingMiddleware",
+    "middleware.cors.CORSMiddleware",
+    "middleware.request_id.RequestIDMiddleware",
+]
+```
+
+## Generate SSL Certificates
 
 Creates SSL certificates in `certs/` directory:
 - `certs/cert.pem` - SSL certificate
@@ -126,11 +186,13 @@ myproject/
 ├── api/          # API route handlers
 ├── core/         # Core application settings
 ├── database/     # Database models and connections
+├── middleware/   # Custom middleware (CORS, Logging, Rate Limit, etc.)
 ├── schema/       # Pydantic schemas
 ├── service/      # Business logic
 ├── views/        # View controllers
 ├── main.py       # FastAPI application entry point
-└── manage.py     # Django-like management script
+├── manage.py     # Django-like management script
+└── settings.py   # Centralized configuration
 ```
 
 ## Requirements

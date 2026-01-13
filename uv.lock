@@ -24,8 +24,8 @@ wheels = [
 ]
 
 [[package]]
-name = "fastapi-cli"
-version = "0.1.2"
+name = "fastgram-cli"
+version = "0.1.6"
 source = { editable = "." }
 dependencies = [
     { name = "rich" },
