@@ -103,12 +103,17 @@ Usage:
 
 Available commands:
     runserver    Start the development server
+    migrate      Create database tables
+    startapp     Create a new application
     help         Show this help message
 
 Options for runserver:
     --host HOST     Bind to this host (default: 127.0.0.1)
     --port PORT     Bind to this port (default: 8000)
     --noreload      Disable auto-reload
+
+Options for startapp:
+    <name>        Name of the application to create
 """
 
 import sys
@@ -151,6 +156,23 @@ def main():
             port=port,
             reload=reload,
         )
+
+    elif command == "migrate":
+        print("🗄️  Running database migrations...")
+        import asyncio
+        from fastgram.database import init_db
+
+        async def run_migrate():
+            try:
+                print("📊 Checking database connection...")
+                await init_db()
+                print("✅ Database tables created successfully!")
+                print("🎉 Migration completed!")
+            except Exception as e:
+                print(f"❌ Migration failed: {e}")
+                sys.exit(1)
+        asyncio.run(run_migrate())
+
     elif command == "help":
         print(__doc__)
     else:
@@ -303,20 +325,32 @@ def load_middlewares(app: FastAPI) -> None:
     )
 
     settings_py = project_dir / "settings.py"
+
+    # Generate a secure secret key for this project
+    import secrets
+    secret_key = secrets.token_urlsafe(32)
+
     settings_py.write_text(
-        '''"""Application settings.
+        f'''"""Application settings.
 
 Contains configuration for the FastAPI application,
 including middleware registration and server settings.
 """
+
 
 # Server settings
 HOST = "127.0.0.1"
 PORT = 8000
 RELOAD = True
 
+# Database settings
+DB_URL = "sqlite+aiosqlite:///./db.sqlite3"
+
 # Rate limit settings
 RATE_LIMIT_LIMIT = "5/second"
+
+
+SECRET_KEY = "{secret_key}"
 
 # Middleware registration
 # Order matters: middlewares are applied from top to bottom
@@ -328,6 +362,9 @@ MIDDLEWARE = [
 ]
 '''
     )
+
+    # === Database setup (imported directly from fastgram.database) ===
+    # No need to create database.py - use fastgram.database directly
 
     console.print("✅ Project structure created successfully!",
                   style="bold green")

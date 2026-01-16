@@ -123,6 +123,12 @@ RATE_LIMIT_LIMIT = "5/second"  # Format: "<count>/<second|minute>"
 All configuration is centralized in `settings.py`:
 
 ```python
+
+SECRET_KEY = "generated_secret_key_here"
+
+# Database settings
+DB_URL = "sqlite+aiosqlite:///./db.sqlite3"
+
 # Server settings
 HOST = "127.0.0.1"
 PORT = 8000
@@ -169,6 +175,12 @@ python manage.py runserver                    # Default: 127.0.0.1:8000
 python manage.py runserver --host 0.0.0.0     # Bind to all interfaces
 python manage.py runserver --port 8080        # Custom port
 python manage.py runserver --noreload         # Disable auto-reload
+```
+
+### Database Migration
+
+```bash
+python manage.py migrate                      # Create database tables
 ```
 
 ### Show Help
